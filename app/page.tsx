@@ -1,152 +1,144 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
-const TRAIT_DATA: Record<string, { label: string, stamina: number, intel: number, speed: number, color: string, glow: string, rarity: string }> = {
-  'shellmate.png.JPG': { label: 'Base Form', stamina: 94, intel: 89, speed: 91, color: 'text-blue-400', glow: 'from-blue-600/30', rarity: 'Common' },
-  'crown.png': { label: 'Royal Crown', stamina: 85, intel: 98, speed: 80, color: 'text-yellow-400', glow: 'from-yellow-500/40', rarity: 'Legendary' },
-  'ninja.png': { label: 'Ninja Gear', stamina: 90, intel: 82, speed: 99, color: 'text-zinc-400', glow: 'from-zinc-500/30', rarity: 'Rare' },
-  'cyber.png': { label: 'Cyber Link', stamina: 88, intel: 95, speed: 92, color: 'text-cyan-400', glow: 'from-cyan-500/40', rarity: 'Epic' },
-  'arc.png': { label: 'Arc Mage', stamina: 70, intel: 100, speed: 75, color: 'text-purple-400', glow: 'from-purple-600/40', rarity: 'Mystic' },
-  'street.png': { label: 'Street Punk', stamina: 92, intel: 80, speed: 88, color: 'text-pink-400', glow: 'from-pink-500/40', rarity: 'Uncommon' },
-  'waste.png': { label: 'Raider', stamina: 99, intel: 75, speed: 82, color: 'text-orange-500', glow: 'from-orange-600/30', rarity: 'Rare' },
-  'TMA.png': { label: 'TMA 420', stamina: 42, intel: 99, speed: 42, color: 'text-emerald-400', glow: 'from-emerald-500/40', rarity: 'Exotic' },
-  'Retro.png': { label: 'Retro Gamer', stamina: 88, intel: 92, speed: 95, color: 'text-red-400', glow: 'from-red-500/40', rarity: 'Rare' },
-  'ssheyii.png': { label: 'Ssheyii 1/1', stamina: 100, intel: 100, speed: 100, color: 'text-rose-500', glow: 'from-rose-600/50', rarity: 'Artifact' },
+// --- CONFIGURATION ---
+const TRAITS: Record<string, { label: string, stamina: number, intel: number, speed: number, color: string, glow: string, rarity: string, mult: number }> = {
+  'shellmate.png.JPG': { label: 'Base Unit', stamina: 88, intel: 85, speed: 82, color: 'text-blue-400', glow: 'from-blue-600/20', rarity: 'Standard', mult: 1.0 },
+  'crown.png': { label: 'Royal King', stamina: 82, intel: 99, speed: 75, color: 'text-yellow-400', glow: 'from-yellow-500/30', rarity: 'Legendary', mult: 5.0 },
+  'ninja.png': { label: 'Shinobi', stamina: 92, intel: 88, speed: 100, color: 'text-zinc-400', glow: 'from-zinc-500/20', rarity: 'Rare', mult: 2.5 },
+  'cyber.png': { label: 'Cyber Runner', stamina: 85, intel: 95, speed: 95, color: 'text-cyan-400', glow: 'from-cyan-500/30', rarity: 'Epic', mult: 3.2 },
+  'arc.png': { label: 'Ether Mage', stamina: 65, intel: 100, speed: 80, color: 'text-purple-400', glow: 'from-purple-600/30', rarity: 'Mystic', mult: 4.5 },
+  'street.png': { label: 'Vandal', stamina: 90, intel: 82, speed: 90, color: 'text-pink-400', glow: 'from-pink-500/30', rarity: 'Uncommon', mult: 1.5 },
+  'ssheyii.png': { label: 'Ssheyii 1/1', stamina: 100, intel: 100, speed: 100, color: 'text-rose-500', glow: 'from-rose-600/40', rarity: 'Artifact', mult: 10.0 },
 };
 
 export default function ShellmatesOS() {
   const [sync, setSync] = useState(false);
   const [trait, setTrait] = useState('shellmate.png.JPG');
-  const [logs, setLogs] = useState<string[]>(["SYSTEM READY...", "AWAITING NEURAL LINK..."]);
-  const [score, setScore] = useState(0);
+  const [xp, setXp] = useState(0);
+  const [logs, setLogs] = useState<string[]>(["SYSTEM BOOT COMPLETE", "WAITING FOR USER..."]);
+  const [isScanning, setIsScanning] = useState(false);
 
-  useEffect(() => {
-    Object.keys(TRAIT_DATA).forEach(file => { const img = new Image(); img.src = `/${file}`; });
+  const active = TRAITS[trait] || TRAITS['shellmate.png.JPG'];
+
+  // --- LOGIC ---
+  const pushLog = useCallback((msg: string) => {
+    setLogs(prev => [msg, ...prev].slice(0, 4));
   }, []);
 
-  const addLog = (msg: string) => {
-    setLogs(prev => [msg, ...prev].slice(0, 5));
+  useEffect(() => {
+    Object.keys(TRAITS).forEach(img => { const i = new Image(); i.src = `/${img}`; });
+  }, []);
+
+  const triggerScan = () => {
+    setIsScanning(true);
+    pushLog("SCANNING NETWORK...");
+    setTimeout(() => {
+      const bonus = Math.floor(Math.random() * 500 * active.mult);
+      setXp(v => v + bonus);
+      pushLog(`FOUND FRAGMENT: +${bonus} XP`);
+      setIsScanning(false);
+    }, 1500);
   };
 
-  const handleTraitChange = (id: string) => {
-    setTrait(id);
-    addLog(`EQUIPPED: ${TRAIT_DATA[id].label.toUpperCase()}`);
-    setScore(prev => prev + 150);
+  const shareToX = () => {
+    const text = `Shellmates OS Neural Link: ACTIVE\nTrait: ${active.label}\nXP Score: ${xp}\nLevel: ${active.rarity}\n\nBuilt by @Ayo_xtt 🐢`;
+    window.open(`x.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
   };
-
-  const current = TRAIT_DATA[trait] || TRAIT_DATA['shellmate.png.JPG'];
 
   return (
-    <main className="min-h-screen bg-[#020306] text-white font-mono p-4 lg:p-10 selection:bg-blue-500 selection:text-white">
-      {/* BACKGROUND EFFECTS */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[url('www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
-        <div className={`absolute inset-0 bg-gradient-radial ${current.glow} opacity-20 blur-[150px] transition-all duration-1000`} />
-      </div>
+    <main className="min-h-screen bg-[#05070a] text-zinc-100 font-mono p-4 lg:p-10 selection:bg-blue-500">
+      {/* GLOBAL GLOW */}
+      <div className={`fixed inset-0 bg-gradient-radial ${active.glow} to-transparent opacity-30 transition-all duration-1000 pointer-events-none`} />
 
-      <div className="relative z-10 max-w-7xl mx-auto space-y-8">
-        {/* HEADER */}
-        <header className="flex justify-between items-end border-b border-white/10 pb-6">
-          <div>
-            <h1 className="text-4xl font-black tracking-tighter italic">SHELLMATES <span className="text-blue-500">v2.0.4</span></h1>
-            <p className="text-[10px] text-zinc-500 uppercase tracking-[0.3em]">Neural Interface // Ayo_xtt Edition</p>
-          </div>
-          <div className="text-right">
-            <p className="text-[10px] text-zinc-500 uppercase">OS_XP_SCORE</p>
-            <p className="text-2xl font-black text-blue-400">{score.toLocaleString()}</p>
-          </div>
-        </header>
-
-        <div className="grid lg:grid-cols-12 gap-8">
-          {/* LEFT: CHARACTER VIEW */}
-          <div className="lg:col-span-5 space-y-6">
-            <div className="relative group aspect-square bg-zinc-900/30 border border-white/5 rounded-3xl flex items-center justify-center overflow-hidden">
-              <div className="absolute top-4 left-4 flex gap-2">
-                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                <div className="w-2 h-2 rounded-full bg-zinc-700" />
-              </div>
-              <img 
-                key={trait}
-                src={`/${trait}`} 
-                className={`w-4/5 object-contain transition-all duration-700 ${sync ? 'scale-105 drop-shadow-[0_0_50px_rgba(255,255,255,0.2)]' : 'grayscale opacity-30 blur-sm'}`}
-              />
-              <div className="absolute bottom-6 left-6 text-left">
-                <span className={`text-[10px] px-3 py-1 rounded-full border border-white/10 bg-black/50 backdrop-blur-md font-bold uppercase ${current.color}`}>
-                  {current.rarity}
-                </span>
-              </div>
+      <div className="relative z-10 max-w-7xl mx-auto grid lg:grid-cols-12 gap-6">
+        
+        {/* LEFT: THE CHARACTER CORE */}
+        <div className="lg:col-span-5 space-y-6">
+          <div className="bg-zinc-900/40 border border-white/5 rounded-[40px] p-8 aspect-square flex flex-col items-center justify-center relative overflow-hidden backdrop-blur-xl">
+            <div className="absolute top-8 left-8 flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full animate-ping ${sync ? 'bg-green-500' : 'bg-red-500'}`} />
+              <span className="text-[10px] tracking-widest text-zinc-500 uppercase">{sync ? 'Link Active' : 'Offline'}</span>
             </div>
+            
+            <img 
+              src={`/${trait}`} 
+              className={`w-4/5 object-contain transition-all duration-700 ${sync ? 'scale-110 drop-shadow-2xl' : 'grayscale opacity-20 blur-xl'}`}
+              onError={(e) => { e.currentTarget.src = "/shellmate.png.JPG"; }}
+            />
 
-            {/* TERMINAL LOGS */}
-            <div className="bg-black/50 border border-white/5 p-4 rounded-xl h-32 overflow-hidden">
-              {logs.map((log, i) => (
-                <p key={i} className={`text-[10px] uppercase mb-1 ${i === 0 ? 'text-blue-400' : 'text-zinc-600'}`}>
-                  {`> ${log}`}
-                </p>
-              ))}
+            <div className="absolute bottom-8 right-8">
+              <p className={`text-[10px] font-black px-4 py-2 rounded-full border border-white/10 bg-black/60 backdrop-blur-md uppercase ${active.color}`}>
+                {active.rarity} // x{active.mult}
+              </p>
             </div>
           </div>
 
-          {/* RIGHT: CONTROLS */}
-          <div className="lg:col-span-7 space-y-8">
-            <div className="flex flex-col gap-4">
+          <div className="bg-black/60 border border-white/5 p-6 rounded-2xl h-32 overflow-hidden">
+            {logs.map((l, i) => (
+              <p key={i} className={`text-[11px] mb-1 ${i === 0 ? 'text-blue-400' : 'text-zinc-600'}`}> {`> ${l}`} </p>
+            ))}
+          </div>
+        </div>
+
+        {/* RIGHT: THE INTERFACE */}
+        <div className="lg:col-span-7 space-y-6">
+          <div className="flex justify-between items-end border-b border-white/5 pb-6">
+            <div>
+              <h1 className="text-5xl font-black italic tracking-tighter uppercase leading-none">The <span className={active.color}>Shell</span></h1>
+              <p className="text-[10px] text-zinc-500 mt-2 tracking-[0.4em]">NEURAL INTERFACE v2.5</p>
+            </div>
+            <div className="text-right">
+              <span className="text-[9px] text-zinc-600 block">TOTAL_XP_YIELD</span>
+              <span className="text-3xl font-black text-blue-500">{xp.toLocaleString()}</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <button 
+              onClick={() => { setSync(!sync); pushLog(sync ? "NEURAL DISCONNECT" : "LINK INITIALIZED"); }}
+              className={`py-6 rounded-2xl font-black uppercase text-xs transition-all ${sync ? 'bg-blue-600 shadow-[0_0_50px_rgba(37,99,235,0.3)]' : 'bg-zinc-900 text-zinc-500 border border-white/5'}`}
+            >
+              {sync ? 'Disconnect System' : 'Neural Sync'}
+            </button>
+            <button 
+              disabled={!sync || isScanning}
+              onClick={triggerScan}
+              className="bg-white text-black py-6 rounded-2xl font-black uppercase text-xs disabled:opacity-20 transition-all hover:invert"
+            >
+              {isScanning ? 'Scanning...' : 'Network Scan'}
+            </button>
+          </div>
+
+          <div className="grid grid-cols-3 lg:grid-cols-4 gap-2">
+            {Object.entries(TRAITS).map(([id, data]) => (
               <button 
-                onClick={() => { setSync(!sync); addLog(sync ? "SYSTEM DISCONNECTED" : "NEURAL LINK ESTABLISHED"); }}
-                className={`w-full py-6 rounded-2xl font-black uppercase tracking-widest transition-all duration-500 border ${sync ? 'bg-blue-600 border-blue-400 shadow-blue-500/50 shadow-2xl' : 'bg-zinc-900 border-white/5 text-zinc-500 hover:border-white/20'}`}
+                key={id}
+                onClick={() => { setTrait(id); pushLog(`LOADED: ${data.label.toUpperCase()}`); setXp(v => v + 10); }}
+                className={`p-3 rounded-xl text-[9px] font-black border transition-all ${trait === id ? 'bg-zinc-100 text-black' : 'bg-zinc-900/50 border-white/5 text-zinc-500 hover:border-white/20'}`}
               >
-                {sync ? '[ DEACTIVATE LINK ]' : '[ INITIALIZE NEURAL SYNC ]'}
+                {data.label}
               </button>
+            ))}
+          </div>
 
-              <div className="grid grid-cols-3 gap-2">
-                {Object.entries(TRAIT_DATA).map(([id, data]) => (
-                  <button 
-                    key={id}
-                    onClick={() => handleTraitChange(id)}
-                    className={`p-3 rounded-xl text-[9px] font-bold uppercase border transition-all ${trait === id ? 'bg-white text-black border-white scale-95' : 'bg-zinc-900/50 border-white/5 text-zinc-500 hover:bg-zinc-800'}`}
-                  >
-                    {data.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* STATS AREA */}
-            <div className="grid grid-cols-3 gap-4 bg-zinc-900/20 p-6 rounded-3xl border border-white/5">
-              {[
-                { n: 'Stamina', v: current.stamina, c: 'bg-blue-500' },
-                { n: 'Intel', v: current.intel, c: 'bg-emerald-500' },
-                { n: 'Speed', v: current.speed, c: 'bg-amber-500' }
-              ].map(s => (
-                <div key={s.n} className="space-y-3">
-                  <p className="text-[10px] text-zinc-500 uppercase font-black">{s.n}</p>
-                  <p className="text-2xl font-black">{sync ? `${s.v}%` : '??'}</p>
-                  <div className="h-1 bg-white/5 rounded-full">
-                    <div className={`h-full transition-all duration-1000 ${s.c}`} style={{ width: sync ? `${s.v}%` : '0%' }} />
-                  </div>
+          <div className="bg-zinc-900/20 border border-white/5 rounded-3xl p-8 grid grid-cols-3 gap-8">
+            {[ { l: 'Stamina', v: active.stamina }, { l: 'Intel', v: active.intel }, { l: 'Speed', v: active.speed } ].map(s => (
+              <div key={s.l} className="space-y-4">
+                <p className="text-[10px] text-zinc-600 font-black uppercase">{s.l}</p>
+                <p className="text-3xl font-black">{sync ? `${s.v}%` : '--'}</p>
+                <div className="h-1 bg-white/5 rounded-full">
+                  <div className={`h-full transition-all duration-1000 ${active.color.replace('text', 'bg')}`} style={{ width: sync ? `${s.v}%` : '0%' }} />
                 </div>
-              ))}
-            </div>
-
-            {/* FOOTER ACTION */}
-            <div className="flex gap-4">
-              <button 
-                onClick={() => {
-                  const text = `Syncing my @Shellmates OS Profile: ${current.label} 🐢\nSCORE: ${score}\n#Shellmates #Web3`;
-                  window.open(`x.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
-                  addLog("TRANSMITTING TO X...");
-                }}
-                className="flex-1 py-5 bg-white text-black rounded-2xl font-black uppercase text-[10px] tracking-widest hover:invert transition-all"
-              >
-                Broadcast Signature
-              </button>
-              <button 
-                onClick={() => { setScore(prev => prev + 500); addLog("NETWORK SCANNING..."); }}
-                className="px-8 bg-zinc-900 border border-white/10 rounded-2xl text-xs hover:bg-zinc-800"
-              >
-                ⚡
-              </button>
-            </div>
+              </div>
+            ))}
           </div>
+
+          {sync && (
+            <button onClick={shareToX} className="w-full py-5 bg-[#1DA1F2] rounded-2xl font-black uppercase text-xs hover:scale-[1.02] transition-all">
+              Broadcast Neural Signature
+            </button>
+          )}
         </div>
       </div>
     </main>
